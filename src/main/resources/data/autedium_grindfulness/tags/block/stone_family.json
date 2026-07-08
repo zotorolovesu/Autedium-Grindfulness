@@ -1,0 +1,10 @@
+{
+	"replace": false,
+	"values": [
+		"#minecraft:base_stone_overworld",
+		"minecraft:tuff",
+		"minecraft:cobbled_deepslate",
+		{ "id": "#c:ores", "required": false },
+		{ "id": "#autedium_grindfulness:ores", "required": true }
+	]
+}
