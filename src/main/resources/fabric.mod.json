@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "autedium_grindfulness",
+	"version": "${version}",
+	"name": "AuTedium - Grindfulness",
+	"description": "Anti-tedium grinding QoL that rates its own fairness. Cuts the boring parts of mining and chopping without lowering expected cost. Part of the AuTedium family.",
+	"authors": ["katoro"],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["me.katoro.autedium.grindfulness.GrindfulnessMod"],
+		"client": ["me.katoro.autedium.grindfulness.client.GrindfulnessClient"],
+		"modmenu": ["me.katoro.autedium.grindfulness.client.ModMenuCompat"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*",
+		"yet_another_config_lib_v3": ">=3.9.5"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}
