@@ -24,6 +24,13 @@ class FlowStreakTest {
 	}
 
 	@Test
+	void exactGapBoundaryDoesNotReset() {
+		FlowStreak s = new FlowStreak();
+		s.onBreak("stone", 0, 120);
+		assertEquals(2, s.onBreak("stone", 120, 120)); // gap == resetTicks -> streak continues
+	}
+
+	@Test
 	void familySwitchResets() {
 		FlowStreak s = new FlowStreak();
 		s.onBreak("stone", 0, 120);
