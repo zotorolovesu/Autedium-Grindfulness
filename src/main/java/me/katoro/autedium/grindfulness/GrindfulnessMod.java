@@ -1,5 +1,6 @@
 package me.katoro.autedium.grindfulness;
 
+import me.katoro.autedium.grindfulness.net.GrindNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ public class GrindfulnessMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		GrindNetworking.registerPayloads();
 		LOGGER.info("AuTedium - Grindfulness loading");
 	}
 }
