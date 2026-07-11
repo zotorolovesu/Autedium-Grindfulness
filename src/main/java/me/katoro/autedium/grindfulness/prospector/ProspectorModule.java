@@ -44,12 +44,14 @@ public final class ProspectorModule implements GrindModule {
 
 			long now = level.getGameTime();
 			int cooldown = GrindConfig.get().prospectCooldownTicks;
-			long last = lastUse.getOrDefault(sp.getUUID(), Long.MIN_VALUE);
-			long remaining = cooldown - (now - last);
-			if (remaining > 0) {
-				sp.sendOverlayMessage(Component.translatable(
-					"autedium_grindfulness.prospector.cooldown", (remaining + 19) / 20));
-				return InteractionResult.SUCCESS;
+			Long last = lastUse.get(sp.getUUID());
+			if (last != null) {
+				long remaining = cooldown - (now - last);
+				if (remaining > 0) {
+					sp.sendOverlayMessage(Component.translatable(
+						"autedium_grindfulness.prospector.cooldown", (remaining + 19) / 20));
+					return InteractionResult.SUCCESS;
+				}
 			}
 
 			int r = GrindConfig.get().prospectRadius;
