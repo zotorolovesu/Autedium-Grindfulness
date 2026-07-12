@@ -14,5 +14,14 @@ public class GrindfulnessClient implements ClientModInitializer {
 
 		ClientPlayNetworking.registerGlobalReceiver(GlowPingPayload.TYPE, (payload, context) ->
 			GlowRenderer.add(payload.positions(), payload.argb(), payload.durationTicks()));
+
+		net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, buildContext) ->
+			dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal("grindfulness")
+				.executes(ctx -> {
+					var client = ctx.getSource().getClient();
+					// cant swap screens while chat is closing, gotta defer
+					client.execute(() -> client.setScreenAndShow(ConfigScreenFactory.create(null)));
+					return 1;
+				})));
 	}
 }
