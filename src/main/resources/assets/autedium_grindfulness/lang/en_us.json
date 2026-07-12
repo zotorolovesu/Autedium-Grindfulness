@@ -1,0 +1,33 @@
+{
+	"autedium_grindfulness.config.title": "AuTedium - Grindfulness",
+	"autedium_grindfulness.config.category": "Grindfulness",
+
+	"autedium_grindfulness.module.vein_miner": "Vein Miner",
+	"autedium_grindfulness.module.vein_miner.desc": "Sneak-break an ore or log to break the whole connected vein/tree. Pays full durability and hunger per block — same cost, less clicking.",
+	"autedium_grindfulness.module.flow_haste": "Flow State",
+	"autedium_grindfulness.module.flow_haste.desc": "Consecutive breaks of the same block family build Haste I→III. Stop or switch and it fades. Faster, not cheaper.",
+	"autedium_grindfulness.module.pity_ping": "Pity Ping",
+	"autedium_grindfulness.module.pity_ping.desc": "Long diamond dry streak while deep mining? The nearest existing vein glows briefly. Never spawns ore — reveal only.",
+	"autedium_grindfulness.module.prospector": "Prospector Ping",
+	"autedium_grindfulness.module.prospector.desc": "Sneak + right-click with a pickaxe: nearby ores glow for 5s. 45s cooldown. The spiciest toggle here.",
+	"autedium_grindfulness.module.toasts": "Dopamine Toasts",
+	"autedium_grindfulness.module.toasts.desc": "Milestone popups and dry-streak progress. Pure feedback, zero balance impact.",
+
+	"autedium_grindfulness.verdict.prefix": "Fairness verdict: ",
+	"autedium_grindfulness.verdict.vanilla_purist": "vanilla purist.",
+	"autedium_grindfulness.verdict.balanced": "balanced.",
+	"autedium_grindfulness.verdict.comfy": "comfy.",
+	"autedium_grindfulness.verdict.pushing_it": "pushing it.",
+	"autedium_grindfulness.verdict.grinders_gambit": "grinder's gambit.",
+	"autedium_grindfulness.verdict.wow_kinda_unfair": "wow kinda unfair!",
+
+	"autedium_grindfulness.prospector.cooldown": "Prospector recharging (%ss)",
+	"autedium_grindfulness.prospector.found": "Pinged %s ore blocks",
+
+	"autedium_grindfulness.toast.join.title": "Grindfulness active",
+	"autedium_grindfulness.toast.milestone.title": "Milestone!",
+	"autedium_grindfulness.toast.milestone.stone": "%s stone-family blocks mined this session",
+	"autedium_grindfulness.toast.milestone.log": "%s logs chopped this session",
+	"autedium_grindfulness.toast.pity.title": "Dry streak",
+	"autedium_grindfulness.toast.pity.body": "%s/%s blocks without a diamond…"
+}

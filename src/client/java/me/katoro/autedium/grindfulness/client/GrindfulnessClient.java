@@ -23,5 +23,17 @@ public class GrindfulnessClient implements ClientModInitializer {
 					client.execute(() -> client.setScreenAndShow(ConfigScreenFactory.create(null)));
 					return 1;
 				})));
+
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+			java.util.Map<String, Boolean> state = new java.util.HashMap<>();
+			me.katoro.autedium.grindfulness.core.ModuleRegistry.all()
+				.forEach(m -> state.put(m.id(), m.enabled()));
+			int score = me.katoro.autedium.grindfulness.core.FairnessMeter.score(state);
+			net.minecraft.client.gui.components.toasts.SystemToast.add(
+				client.gui.toastManager(),
+				net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
+				net.minecraft.network.chat.Component.translatable("autedium_grindfulness.toast.join.title"),
+				ConfigScreenFactory.verdictText(score));
+		});
 	}
 }
