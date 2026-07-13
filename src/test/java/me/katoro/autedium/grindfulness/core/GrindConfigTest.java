@@ -29,6 +29,9 @@ class GrindConfigTest {
 		GrindConfig.load(file);
 		assertTrue(GrindConfig.get().isEnabled("prospector"));
 		assertEquals(12, GrindConfig.get().veinCapOres);
+
+		String rewritten = Files.readString(file);
+		assertTrue(rewritten.contains("\"veinCapOres\": 12"));
 	}
 
 	@Test

@@ -24,7 +24,7 @@ public final class ConfigScreenFactory {
 	private ConfigScreenFactory() {}
 
 	public static Component verdictText(int score) {
-		ChatFormatting color = switch (Math.min(score, 5)) {
+		ChatFormatting color = switch (Math.min(Math.max(score, 0), 5)) {
 			case 0, 1 -> ChatFormatting.GREEN;
 			case 2, 3 -> ChatFormatting.YELLOW;
 			default -> ChatFormatting.RED;

@@ -49,9 +49,13 @@ public final class GlowRenderer {
 	public static void add(List<BlockPos> positions, int argb, int durationTicks) {
 		var client = net.minecraft.client.Minecraft.getInstance();
 		if (client.level == null) return;
-		long expiry = client.level.getGameTime() + durationTicks;
+		int clamped = Math.min(durationTicks, 1200);
+		long expiry = client.level.getGameTime() + clamped;
 		for (BlockPos pos : positions) {
 			PINGS.add(new Ping(pos.immutable(), argb, expiry));
+		}
+		if (PINGS.size() > 512) {
+			PINGS.subList(0, PINGS.size() - 512).clear();
 		}
 	}
 

@@ -14,7 +14,7 @@ public record GlowPingPayload(List<BlockPos> positions, int argb, int durationTi
 		new CustomPacketPayload.Type<>(GrindfulnessMod.id("glow_ping"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, GlowPingPayload> CODEC = StreamCodec.composite(
-		BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list()), GlowPingPayload::positions,
+		BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list(256)), GlowPingPayload::positions,
 		ByteBufCodecs.INT, GlowPingPayload::argb,
 		ByteBufCodecs.VAR_INT, GlowPingPayload::durationTicks,
 		GlowPingPayload::new

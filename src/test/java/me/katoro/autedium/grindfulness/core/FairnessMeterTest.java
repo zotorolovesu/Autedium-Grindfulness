@@ -54,5 +54,6 @@ class FairnessMeterTest {
 		assertEquals("grinders_gambit", FairnessMeter.verdictKey(4));
 		assertEquals("wow_kinda_unfair", FairnessMeter.verdictKey(5));
 		assertEquals("wow_kinda_unfair", FairnessMeter.verdictKey(9));
+		assertEquals("vanilla_purist", FairnessMeter.verdictKey(-3));
 	}
 }

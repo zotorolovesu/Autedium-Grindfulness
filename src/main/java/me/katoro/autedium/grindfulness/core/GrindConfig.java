@@ -8,13 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class GrindConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static GrindConfig instance = new GrindConfig();
 	private static Path file;
 
-	public Map<String, Boolean> enabled = new LinkedHashMap<>();
+	public Map<String, Boolean> enabled = new ConcurrentHashMap<>();
 	public int veinCapOres = 12;
 	public int veinCapLogs = 64;
 	public int flowResetTicks = 120;
@@ -39,7 +40,7 @@ public final class GrindConfig {
 			}
 		}
 		instance = loaded != null ? loaded : new GrindConfig();
-		if (instance.enabled == null) instance.enabled = new LinkedHashMap<>();
+		instance.enabled = instance.enabled == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(instance.enabled);
 		save();
 	}
 
