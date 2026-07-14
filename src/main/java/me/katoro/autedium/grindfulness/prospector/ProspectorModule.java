@@ -75,12 +75,18 @@ public final class ProspectorModule implements GrindModule {
 			int r = radiusFor(stack, GrindConfig.get().prospectRadius);
 			int glowTicks = GLOW_TICKS + enchantLevel(level, stack, Enchantments.FORTUNE) * FORTUNE_BONUS_TICKS;
 			BlockPos center = sp.blockPosition();
+			// collect EVERYTHING then keep the nearest N. capping mid-scan skipped ores
+			// right in front of u cause betweenClosed walks from the cube corner
 			List<BlockPos> hits = new ArrayList<>();
 			for (BlockPos p : BlockPos.betweenClosed(center.offset(-r, -r, -r), center.offset(r, r, r))) {
 				if (level.getBlockState(p).is(BlockFamilies.ORES)) {
 					hits.add(p.immutable());
-					if (hits.size() >= MAX_RESULTS + tier * 8) break; // 64..104, payload cap is 256 so fine
 				}
+			}
+			int keep = MAX_RESULTS + tier * 8; // 64..104, payload cap is 256 so fine
+			if (hits.size() > keep) {
+				hits.sort(java.util.Comparator.comparingDouble(p -> p.distSqr(center)));
+				hits = new ArrayList<>(hits.subList(0, keep));
 			}
 
 			lastUse.put(sp.getUUID(), now);
