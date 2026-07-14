@@ -7,6 +7,22 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public class GrindfulnessClient implements ClientModInitializer {
+	// per-char color lerp. is this necessary? no. does it look sick? yes
+	private static net.minecraft.network.chat.Component gradient(String text, int from, int to, boolean bold) {
+		var out = net.minecraft.network.chat.Component.empty();
+		int n = Math.max(1, text.length() - 1);
+		for (int i = 0; i < text.length(); i++) {
+			float t = (float) i / n;
+			int r = (int) (((from >> 16 & 0xFF) * (1 - t)) + ((to >> 16 & 0xFF) * t));
+			int g = (int) (((from >> 8 & 0xFF) * (1 - t)) + ((to >> 8 & 0xFF) * t));
+			int b = (int) (((from & 0xFF) * (1 - t)) + ((to & 0xFF) * t));
+			final int rgb = r << 16 | g << 8 | b;
+			out.append(net.minecraft.network.chat.Component.literal(String.valueOf(text.charAt(i)))
+				.withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(rgb)).withBold(bold)));
+		}
+		return out;
+	}
+
 	@Override
 	public void onInitializeClient() {
 		GlowRenderer.init();
@@ -31,11 +47,15 @@ public class GrindfulnessClient implements ClientModInitializer {
 			int score = me.katoro.autedium.grindfulness.core.FairnessMeter.score(state);
 			// chat instead of a popup, popups r annoying. player can be null this early so defer a tick
 			client.execute(() -> {
-				if (client.player != null) {
-					client.player.sendSystemMessage(
-						net.minecraft.network.chat.Component.translatable("autedium_grindfulness.chat.join")
-							.append(ConfigScreenFactory.verdictText(score)));
-				}
+				if (client.player == null) return;
+				var p = client.player;
+				p.sendSystemMessage(gradient("━━━━━━ ⛏ AuTedium – Grindfulness ⛏ ━━━━━━", 0x55FFFF, 0xFF55FF, true));
+				p.sendSystemMessage(net.minecraft.network.chat.Component.literal("  ")
+					.append(net.minecraft.network.chat.Component.translatable("autedium_grindfulness.chat.join")
+						.withStyle(net.minecraft.ChatFormatting.GRAY, net.minecraft.ChatFormatting.ITALIC)));
+				p.sendSystemMessage(net.minecraft.network.chat.Component.literal("  ")
+					.append(ConfigScreenFactory.verdictText(score)));
+				p.sendSystemMessage(gradient("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 0xFF55FF, 0x55FFFF, false));
 			});
 		});
 	}
