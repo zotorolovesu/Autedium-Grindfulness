@@ -14,6 +14,11 @@ public final class VeinMinerModule implements GrindModule {
 	// destroyBlock re-fires AFTER on this same thread, without this we recurse into oblivion
 	private static final ThreadLocal<Boolean> CHAINING = ThreadLocal.withInitial(() -> false);
 
+	// wood/stone/gold/iron/diamond/netherite. ores land on 6/6/8/12/16/20 w default config
+	private static final int[] ORE_CAP_BONUS = {-6, -6, -4, 0, 4, 8};
+	// logs: 32/40/44/48/56/64 w default 64
+	private static final int[] LOG_CAP_BONUS = {-32, -24, -20, -16, -8, 0};
+
 	@Override
 	public String id() {
 		return "vein_miner";
@@ -30,11 +35,13 @@ public final class VeinMinerModule implements GrindModule {
 			if (!enabled() || level.isClientSide() || CHAINING.get()) return;
 			if (!(player instanceof ServerPlayer sp) || !sp.isShiftKeyDown()) return;
 
+			// better tool = bigger chains. config = iron baseline for ores, netherite for logs
+			int tier = me.katoro.autedium.grindfulness.core.ToolTiers.index(sp.getMainHandItem());
 			int cap;
 			if (state.is(BlockFamilies.ORES)) {
-				cap = GrindConfig.get().veinCapOres;
+				cap = Math.max(1, GrindConfig.get().veinCapOres + ORE_CAP_BONUS[tier]);
 			} else if (state.is(BlockFamilies.LOG_FAMILY)) {
-				cap = GrindConfig.get().veinCapLogs;
+				cap = Math.max(1, GrindConfig.get().veinCapLogs + LOG_CAP_BONUS[tier]);
 			} else {
 				return;
 			}

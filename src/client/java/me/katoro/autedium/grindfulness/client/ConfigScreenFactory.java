@@ -15,6 +15,7 @@ import me.katoro.autedium.grindfulness.core.ModuleRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
@@ -23,9 +24,14 @@ import java.util.Map;
 public final class ConfigScreenFactory {
 	private ConfigScreenFactory() {}
 
+	private static final ChatFormatting[] RAINBOW = {
+		ChatFormatting.RED, ChatFormatting.GOLD, ChatFormatting.YELLOW,
+		ChatFormatting.GREEN, ChatFormatting.AQUA, ChatFormatting.LIGHT_PURPLE,
+	};
+
 	public static Component verdictText(int score) {
 		int clamped = Math.min(Math.max(score, 0), 5);
-		// full gradient, one vibe per tier. max tier gets bold cause u earned it
+		// full gradient, one vibe per tier
 		ChatFormatting color = switch (clamped) {
 			case 0 -> ChatFormatting.GRAY;
 			case 1 -> ChatFormatting.GREEN;
@@ -34,10 +40,23 @@ public final class ConfigScreenFactory {
 			case 4 -> ChatFormatting.GOLD;
 			default -> ChatFormatting.RED;
 		};
-		Component verdict = clamped >= 5
-			? Component.translatable("autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score)).withStyle(color, ChatFormatting.BOLD)
-			: Component.translatable("autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score)).withStyle(color);
-		return Component.translatable("autedium_grindfulness.verdict.prefix").append(verdict);
+		String key = "autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score);
+		Component verdict;
+		if (clamped >= 5) {
+			// max tier goes full 2012 forum signature rainbow. intentional. no regrets
+			MutableComponent rainbow = Component.empty();
+			String text = net.minecraft.client.resources.language.I18n.get(key);
+			for (int i = 0; i < text.length(); i++) {
+				rainbow.append(Component.literal(String.valueOf(text.charAt(i)))
+					.withStyle(RAINBOW[i % RAINBOW.length], ChatFormatting.BOLD));
+			}
+			verdict = rainbow;
+		} else {
+			verdict = Component.translatable(key).withStyle(color);
+		}
+		return Component.translatable("autedium_grindfulness.verdict.prefix")
+			.append(verdict)
+			.append(Component.literal(" — KatoroCodesShit").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 	}
 
 	public static Screen create(@Nullable Screen parent) {

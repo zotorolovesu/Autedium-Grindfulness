@@ -56,9 +56,12 @@ public final class ProspectorModule implements GrindModule {
 			if (!sp.getMainHandItem().is(ItemTags.PICKAXES)) return InteractionResult.PASS;
 
 			var stack = sp.getMainHandItem();
+			int tier = me.katoro.autedium.grindfulness.core.ToolTiers.index(stack);
 			long now = level.getGameTime();
+			int goldBonus = tier == 2 ? 120 : 0; // gold loves shiny, -6s extra
 			int cooldown = Math.max(COOLDOWN_FLOOR_TICKS,
-				GrindConfig.get().prospectCooldownTicks - enchantLevel(level, stack, Enchantments.EFFICIENCY) * EFFICIENCY_DISCOUNT_TICKS);
+				GrindConfig.get().prospectCooldownTicks - goldBonus
+					- enchantLevel(level, stack, Enchantments.EFFICIENCY) * EFFICIENCY_DISCOUNT_TICKS);
 			Long last = lastUse.get(sp.getUUID());
 			if (last != null) {
 				long remaining = cooldown - (now - last);
@@ -76,7 +79,7 @@ public final class ProspectorModule implements GrindModule {
 			for (BlockPos p : BlockPos.betweenClosed(center.offset(-r, -r, -r), center.offset(r, r, r))) {
 				if (level.getBlockState(p).is(BlockFamilies.ORES)) {
 					hits.add(p.immutable());
-					if (hits.size() >= MAX_RESULTS) break;
+					if (hits.size() >= MAX_RESULTS + tier * 8) break; // 64..104, payload cap is 256 so fine
 				}
 			}
 
@@ -87,12 +90,11 @@ public final class ProspectorModule implements GrindModule {
 		});
 	}
 
-	// better pick = wider scan. caps at 20 (netherite) on purpose, see note up top
+	// better pick = wider scan + more hits. caps at 20 radius (netherite) on purpose, see note up top
+	private static final int[] RADIUS_BONUS = {0, 0, 1, 2, 6, 8};
+
 	private static int radiusFor(ItemStack stack, int base) {
-		if (stack.is(Items.NETHERITE_PICKAXE)) return base + 8;
-		if (stack.is(Items.DIAMOND_PICKAXE)) return base + 6;
-		if (stack.is(Items.IRON_PICKAXE) || stack.is(Items.GOLDEN_PICKAXE)) return base + 2;
-		return base; // wood/stone/whatever modded pick
+		return base + RADIUS_BONUS[me.katoro.autedium.grindfulness.core.ToolTiers.index(stack)];
 	}
 
 	private static int enchantLevel(Level level, ItemStack stack, ResourceKey<Enchantment> key) {
