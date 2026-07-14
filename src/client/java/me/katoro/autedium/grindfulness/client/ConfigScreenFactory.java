@@ -28,6 +28,29 @@ public final class ConfigScreenFactory {
 		ChatFormatting.RED, ChatFormatting.GOLD, ChatFormatting.YELLOW,
 		ChatFormatting.GREEN, ChatFormatting.AQUA, ChatFormatting.LIGHT_PURPLE,
 	};
+	// raw rgb versions for the yacl label, the ChatFormatting enum codes werent showing there
+	private static final int[] RAINBOW_RGB = {0xFF5555, 0xFFAA00, 0xFFFF55, 0x55FF55, 0x55FFFF, 0xFF55FF};
+	private static final int[] TIER_RGB = {0xAAAAAA, 0x55FF55, 0x55FFFF, 0xFFFF55, 0xFFAA00, 0xFF5555};
+
+	// yacl label version: rgb styles, no signature
+	public static Component yaclVerdict(int score) {
+		int clamped = Math.min(Math.max(score, 0), 5);
+		String key = "autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score);
+		net.minecraft.network.chat.MutableComponent verdict = Component.empty();
+		if (clamped >= 5) {
+			String text = net.minecraft.client.resources.language.I18n.get(key);
+			for (int i = 0; i < text.length(); i++) {
+				final int rgb = RAINBOW_RGB[i % RAINBOW_RGB.length];
+				verdict.append(Component.literal(String.valueOf(text.charAt(i)))
+					.withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(rgb)).withBold(true)));
+			}
+		} else {
+			final int rgb = TIER_RGB[clamped];
+			verdict = Component.translatable(key)
+				.withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(rgb)));
+		}
+		return Component.translatable("autedium_grindfulness.verdict.prefix").append(verdict);
+	}
 
 	public static Component verdictText(int score) {
 		int clamped = Math.min(Math.max(score, 0), 5);
@@ -66,7 +89,7 @@ public final class ConfigScreenFactory {
 			pending.put(m.id(), m.enabled());
 		}
 
-		Component[] verdictHolder = { verdictText(FairnessMeter.score(pending)) };
+		Component[] verdictHolder = { yaclVerdict(FairnessMeter.score(pending)) };
 		StateManager<Component> verdictState = StateManager.createSimple(
 			Component.empty(), () -> verdictHolder[0], c -> verdictHolder[0] = c);
 
@@ -86,7 +109,7 @@ public final class ConfigScreenFactory {
 				.addListener((opt, event) -> {
 					if (event == OptionEventListener.Event.STATE_CHANGE || event == OptionEventListener.Event.INITIAL) {
 						pending.put(id, opt.pendingValue());
-						verdictState.set(verdictText(FairnessMeter.score(pending)));
+						verdictState.set(yaclVerdict(FairnessMeter.score(pending)));
 					}
 				})
 				.build());
