@@ -27,7 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProspectorModule implements GrindModule {
-	private static final int GLOW_ARGB = 0x5900FFFF;   // translucent cyan
+	private static final int GLOW_ARGB = 0x59F2F2F2;   // white edges, greyish fill (renderer dims the fill)
 	private static final int GLOW_TICKS = 100;         // 5s base
 	private static final int MAX_RESULTS = 64;
 	// scaling caps. these floors/ceilings are load bearing for fairness, dont raise them:
