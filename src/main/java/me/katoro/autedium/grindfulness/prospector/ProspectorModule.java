@@ -84,6 +84,9 @@ public final class ProspectorModule implements GrindModule {
 			}
 
 			lastUse.put(sp.getUUID(), now);
+			// pings cost durability so a chest-loot gold pick is a legit dowsing rod
+			// that dies after ~5 uses instead of a free forever-wand. self balancing
+			stack.hurtAndBreak(6, sp, net.minecraft.world.entity.EquipmentSlot.MAINHAND);
 			GrindNetworking.sendGlow(sp, hits, GLOW_ARGB, glowTicks);
 			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.prospector.found", hits.size()));
 			return InteractionResult.SUCCESS;

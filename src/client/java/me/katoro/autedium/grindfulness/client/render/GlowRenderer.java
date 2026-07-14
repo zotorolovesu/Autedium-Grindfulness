@@ -67,11 +67,18 @@ public final class GlowRenderer {
 		poses.pushPose();
 		poses.translate(-camera.x, -camera.y, -camera.z);
 
+		// slow breathing pulse, 0.7..1.0. nanoTime cause its purely cosmetic
+		float pulse = 0.85f + 0.15f * (float) Math.sin(System.nanoTime() / 4.0e8);
+
 		context.submitNodeCollector().submitCustomGeometry(poses, GLOW_TYPE, (pose, buffer) -> {
 			for (Ping ping : PINGS) {
-				// glowing-effect vibe: faint fill + bright edges so it reads as an outline
-				emitBox(pose, buffer, ping.pos(), (ping.argb() & 0x00FFFFFF) | 0x28000000);
-				emitEdges(pose, buffer, ping.pos(), (ping.argb() & 0x00FFFFFF) | 0xE6000000);
+				int rgb = ping.argb() & 0x00FFFFFF;
+				// fake bloom: faint fill + 3 edge shells, tight n bright -> wide n soft.
+				// real bloom is a post shader and iris WILL eat it, this is just geometry so sodium doesnt care
+				emitBox(pose, buffer, ping.pos(), withAlpha(rgb, 0x24, pulse));
+				emitEdges(pose, buffer, ping.pos(), withAlpha(rgb, 0xE6, pulse), 0.04f);
+				emitEdges(pose, buffer, ping.pos(), withAlpha(rgb, 0x58, pulse), 0.10f);
+				emitEdges(pose, buffer, ping.pos(), withAlpha(rgb, 0x22, pulse), 0.18f);
 			}
 		});
 
@@ -91,10 +98,13 @@ public final class GlowRenderer {
 		quad(pose, buffer, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1); // +Y
 	}
 
+	private static int withAlpha(int rgb, int baseAlpha, float pulse) {
+		return ((int) (baseAlpha * pulse) << 24) | rgb;
+	}
+
 	// the 12 edges as skinny boxes. real line pipelines exist but this reuses the one
-	// pipeline we KNOW works thru walls, and 288 verts a block is nothing
-	private static void emitEdges(PoseStack.Pose pose, VertexConsumer buffer, BlockPos p, int color) {
-		float t = 0.045f; // edge thickness
+	// pipeline we KNOW works thru walls, and ~900 verts a block across 3 shells is still nothing
+	private static void emitEdges(PoseStack.Pose pose, VertexConsumer buffer, BlockPos p, int color, float t) {
 		float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
 		float x1 = x0 + 1, y1 = y0 + 1, z1 = z0 + 1;
 		// 4 edges along X
