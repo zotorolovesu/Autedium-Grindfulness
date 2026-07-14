@@ -29,11 +29,14 @@ public class GrindfulnessClient implements ClientModInitializer {
 			me.katoro.autedium.grindfulness.core.ModuleRegistry.all()
 				.forEach(m -> state.put(m.id(), m.enabled()));
 			int score = me.katoro.autedium.grindfulness.core.FairnessMeter.score(state);
-			net.minecraft.client.gui.components.toasts.SystemToast.add(
-				client.gui.toastManager(),
-				net.minecraft.client.gui.components.toasts.SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
-				net.minecraft.network.chat.Component.translatable("autedium_grindfulness.toast.join.title"),
-				ConfigScreenFactory.verdictText(score));
+			// chat instead of a popup, popups r annoying. player can be null this early so defer a tick
+			client.execute(() -> {
+				if (client.player != null) {
+					client.player.sendSystemMessage(
+						net.minecraft.network.chat.Component.translatable("autedium_grindfulness.chat.join")
+							.append(ConfigScreenFactory.verdictText(score)));
+				}
+			});
 		});
 	}
 }

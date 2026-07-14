@@ -24,13 +24,20 @@ public final class ConfigScreenFactory {
 	private ConfigScreenFactory() {}
 
 	public static Component verdictText(int score) {
-		ChatFormatting color = switch (Math.min(Math.max(score, 0), 5)) {
-			case 0, 1 -> ChatFormatting.GREEN;
-			case 2, 3 -> ChatFormatting.YELLOW;
+		int clamped = Math.min(Math.max(score, 0), 5);
+		// full gradient, one vibe per tier. max tier gets bold cause u earned it
+		ChatFormatting color = switch (clamped) {
+			case 0 -> ChatFormatting.GRAY;
+			case 1 -> ChatFormatting.GREEN;
+			case 2 -> ChatFormatting.AQUA;
+			case 3 -> ChatFormatting.YELLOW;
+			case 4 -> ChatFormatting.GOLD;
 			default -> ChatFormatting.RED;
 		};
-		return Component.translatable("autedium_grindfulness.verdict.prefix")
-			.append(Component.translatable("autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score)).withStyle(color));
+		Component verdict = clamped >= 5
+			? Component.translatable("autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score)).withStyle(color, ChatFormatting.BOLD)
+			: Component.translatable("autedium_grindfulness.verdict." + FairnessMeter.verdictKey(score)).withStyle(color);
+		return Component.translatable("autedium_grindfulness.verdict.prefix").append(verdict);
 	}
 
 	public static Screen create(@Nullable Screen parent) {
