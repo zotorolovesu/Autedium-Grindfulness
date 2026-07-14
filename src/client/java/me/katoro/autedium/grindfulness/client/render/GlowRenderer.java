@@ -69,7 +69,9 @@ public final class GlowRenderer {
 
 		context.submitNodeCollector().submitCustomGeometry(poses, GLOW_TYPE, (pose, buffer) -> {
 			for (Ping ping : PINGS) {
-				emitBox(pose, buffer, ping.pos(), ping.argb());
+				// glowing-effect vibe: faint fill + bright edges so it reads as an outline
+				emitBox(pose, buffer, ping.pos(), (ping.argb() & 0x00FFFFFF) | 0x28000000);
+				emitEdges(pose, buffer, ping.pos(), (ping.argb() & 0x00FFFFFF) | 0xE6000000);
 			}
 		});
 
@@ -87,6 +89,40 @@ public final class GlowRenderer {
 		quad(pose, buffer, color, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0); // +X
 		quad(pose, buffer, color, x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0); // -Y
 		quad(pose, buffer, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1); // +Y
+	}
+
+	// the 12 edges as skinny boxes. real line pipelines exist but this reuses the one
+	// pipeline we KNOW works thru walls, and 288 verts a block is nothing
+	private static void emitEdges(PoseStack.Pose pose, VertexConsumer buffer, BlockPos p, int color) {
+		float t = 0.045f; // edge thickness
+		float x0 = p.getX(), y0 = p.getY(), z0 = p.getZ();
+		float x1 = x0 + 1, y1 = y0 + 1, z1 = z0 + 1;
+		// 4 edges along X
+		bar(pose, buffer, color, x0, y0 - t, z0 - t, x1, y0 + t, z0 + t);
+		bar(pose, buffer, color, x0, y0 - t, z1 - t, x1, y0 + t, z1 + t);
+		bar(pose, buffer, color, x0, y1 - t, z0 - t, x1, y1 + t, z0 + t);
+		bar(pose, buffer, color, x0, y1 - t, z1 - t, x1, y1 + t, z1 + t);
+		// 4 along Y
+		bar(pose, buffer, color, x0 - t, y0, z0 - t, x0 + t, y1, z0 + t);
+		bar(pose, buffer, color, x1 - t, y0, z0 - t, x1 + t, y1, z0 + t);
+		bar(pose, buffer, color, x0 - t, y0, z1 - t, x0 + t, y1, z1 + t);
+		bar(pose, buffer, color, x1 - t, y0, z1 - t, x1 + t, y1, z1 + t);
+		// 4 along Z
+		bar(pose, buffer, color, x0 - t, y0 - t, z0, x0 + t, y0 + t, z1);
+		bar(pose, buffer, color, x1 - t, y0 - t, z0, x1 + t, y0 + t, z1);
+		bar(pose, buffer, color, x0 - t, y1 - t, z0, x0 + t, y1 + t, z1);
+		bar(pose, buffer, color, x1 - t, y1 - t, z0, x1 + t, y1 + t, z1);
+	}
+
+	// axis-aligned solid box between two corners, 6 quads
+	private static void bar(PoseStack.Pose pose, VertexConsumer buffer, int color,
+			float x0, float y0, float z0, float x1, float y1, float z1) {
+		quad(pose, buffer, color, x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0);
+		quad(pose, buffer, color, x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1);
+		quad(pose, buffer, color, x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1);
+		quad(pose, buffer, color, x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0);
+		quad(pose, buffer, color, x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0);
+		quad(pose, buffer, color, x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1);
 	}
 
 	private static void quad(PoseStack.Pose pose, VertexConsumer buffer, int color,
