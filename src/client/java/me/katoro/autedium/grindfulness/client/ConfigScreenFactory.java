@@ -95,7 +95,12 @@ public final class ConfigScreenFactory {
 
 		var category = ConfigCategory.createBuilder()
 			.name(Component.translatable("autedium_grindfulness.config.category"))
-			.option(LabelOption.createBuilder().state(verdictState).build());
+			.option(Option.<Component>createBuilder()
+				.name(Component.literal("verdict"))
+				.description(OptionDescription.EMPTY)
+				.stateManager(verdictState)
+				.customController(ColoredLabelController::new)
+				.build());
 
 		for (GrindModule module : ModuleRegistry.all()) {
 			String id = module.id();
