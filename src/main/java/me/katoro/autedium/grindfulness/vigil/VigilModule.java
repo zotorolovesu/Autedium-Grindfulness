@@ -2,17 +2,16 @@ package me.katoro.autedium.grindfulness.vigil;
 
 import me.katoro.autedium.grindfulness.core.GrindConfig;
 import me.katoro.autedium.grindfulness.core.GrindModule;
+import me.katoro.autedium.grindfulness.net.VigilWaitPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -23,19 +22,26 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.gamerules.GameRules;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-// channeled "wait": kneel down, compress daytime in a radius — ALL random-tick
-// behavior (crops, saplings, copper, leaves, grass...) plus furnace-family block
-// entities. pay scaled hunger, stay a sitting duck. bends wall-clock — heaviest
-// module yet.
+// skyrim-style "wait": press V (client keybind), pick 1-8 game hours, kneel and
+// compress time in a radius — ALL random-tick behavior (crops, saplings, copper,
+// leaves, grass...) plus furnace-family block entities. pay scaled hunger, stay
+// a sitting duck. bends wall-clock — heaviest module yet.
+//
+// rework 2: trigger is a C2S payload from the wait screen (client pre-checks,
+// server REVALIDATES everything — never trust the client). channel runs until
+// hours x 1000 tick-equivalents are delivered at (multiplier - 1) per tick, or
+// any break guard fires. early break keeps what was delivered; hunger spent is
+// spent.
 //
 // generalization choice (spec left it to the implementer): BLANKET random-tick
 // acceleration via isRandomlyTicking(), no allowlist tag — the vanilla flag IS
 // the allowlist. spawners/entity spawning never random-tick, so guard #4 holds
-// by construction. the old crop_family tag is gone.
+// by construction.
 public final class VigilModule implements GrindModule {
 	private static final double MOVE_EPSILON_SQR = 0.01; // ~0.1 blocks of drift = you moved
 
@@ -54,31 +60,10 @@ public final class VigilModule implements GrindModule {
 
 	@Override
 	public void init() {
-		// trigger: sneak + right-click a time-flowing block (randomly ticking, or a
-		// furnace-family block entity) with an empty main hand. deliberate by
-		// construction — you cant do it while holding anything.
-		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
-			if (!enabled() || level.isClientSide() || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-			if (!(player instanceof ServerPlayer sp) || !sp.isShiftKeyDown()) return InteractionResult.PASS;
-			if (!sp.getMainHandItem().isEmpty()) return InteractionResult.PASS;
-			BlockState state = level.getBlockState(hit.getBlockPos());
-			if (!state.isRandomlyTicking() && !isFurnaceFamily(level.getBlockEntity(hit.getBlockPos()))) return InteractionResult.PASS;
-
-			if (channeling.remove(sp.getUUID()) != null) {
-				sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.end"));
-				return InteractionResult.SUCCESS;
-			}
-			// guard #1 (daytime only) + guard #2 (hunger floor)
-			boolean day = VigilRules.isDay(level.getDefaultClockTime());
-			if (!VigilRules.canStart(day, sp.getFoodData().getFoodLevel(), GrindConfig.get().vigilHungerFloor)) {
-				sp.sendOverlayMessage(Component.translatable(
-					day ? "autedium_grindfulness.vigil.too_hungry" : "autedium_grindfulness.vigil.not_day"));
-				return InteractionResult.SUCCESS;
-			}
-			channeling.put(sp.getUUID(), new VigilState(sp.position(), ((ServerLevel) level).getGameTime()));
-			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.start"));
-			return InteractionResult.SUCCESS;
-		});
+		// trigger: the wait-screen confirm. fabric play handlers run on the server
+		// thread, so touching the channel map + player state here is safe.
+		ServerPlayNetworking.registerGlobalReceiver(VigilWaitPayload.TYPE, (payload, context) ->
+			startChannel(context.player(), payload.hours()));
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (channeling.isEmpty()) return;
@@ -92,6 +77,33 @@ public final class VigilModule implements GrindModule {
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> channeling.remove(handler.getPlayer().getUUID()));
 	}
 
+	// server-side revalidation of ALL start guards — the client pre-check is
+	// cosmetics, this is the law.
+	private void startChannel(ServerPlayer sp, double requestedHours) {
+		if (!enabled() || !(sp.level() instanceof ServerLevel level) || !sp.isAlive()) return;
+		if (channeling.containsKey(sp.getUUID())) return; // already kneeling
+
+		long dayTime = level.getDefaultClockTime();
+		// guard #1 (daytime only) + guard #2 (hunger floor)
+		boolean day = VigilRules.isDay(dayTime);
+		if (!VigilRules.canStart(day, sp.getFoodData().getFoodLevel(), GrindConfig.get().vigilHungerFloor)) {
+			sp.sendOverlayMessage(Component.translatable(
+				day ? "autedium_grindfulness.vigil.too_hungry" : "autedium_grindfulness.vigil.not_day"));
+			return;
+		}
+		int multiplier = VigilRules.clampMultiplier(GrindConfig.get().vigilMultiplier);
+		if (VigilRules.deliveredPerTick(multiplier) <= 0) return; // 1x delivers nothing, refuse
+		// remaining-daytime cap + 0.5 snap + [1, 8] clamp — 0 means dusk is too close
+		double hours = VigilRules.clampWaitHours(requestedHours, VigilRules.remainingDaytime(dayTime));
+		if (hours <= 0) {
+			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.dusk"));
+			return;
+		}
+		channeling.put(sp.getUUID(),
+			new VigilState(sp.position(), VigilRules.targetTicks(hours)));
+		sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.start"));
+	}
+
 	private void tickChannel(ServerPlayer sp, VigilState state) {
 		ServerLevel level = sp.level() instanceof ServerLevel sl ? sl : null;
 		if (level == null || !sp.isAlive()) {
@@ -103,9 +115,9 @@ public final class VigilModule implements GrindModule {
 		boolean day = VigilRules.isDay(level.getDefaultClockTime());
 		boolean moved = sp.position().distanceToSqr(state.anchor) > MOVE_EPSILON_SQR;
 		boolean damaged = sp.hurtTime > 0; // guard #5: real vulnerability, damage breaks it
-		// releasing sneak is the "any input" breaker — kneeling IS the channel
-		if (VigilRules.shouldBreak(day, sp.getFoodData().getFoodLevel(), floor, moved, damaged, sp.isShiftKeyDown())) {
+		if (VigilRules.shouldBreak(day, sp.getFoodData().getFoodLevel(), floor, moved, damaged)) {
 			channeling.remove(sp.getUUID());
+			// early break keeps whatever was delivered — hunger spent is spent
 			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.broken"));
 			return;
 		}
@@ -142,12 +154,19 @@ public final class VigilModule implements GrindModule {
 		// HARD exclusion (guard #4): only these five, never spawners/anything else.
 		tickBlockEntities(level, center, radius, multiplier - 1);
 
-		// action bar: vigil · m:ss · hunger bar
+		// duration target: delivered = (multiplier - 1) tick-equivalents per tick
+		state.delivered += VigilRules.deliveredPerTick(multiplier);
+		if (state.delivered >= state.targetTicks) {
+			channeling.remove(sp.getUUID());
+			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.complete"));
+			return;
+		}
+
+		// action bar: vigil · 2.5h left · hunger bar
 		if (level.getGameTime() % 10 == 0) {
-			long elapsed = (level.getGameTime() - state.startTick) / 20;
-			String clock = String.format(java.util.Locale.ROOT, "%d:%02d", elapsed / 60, elapsed % 60);
+			double hoursLeft = (state.targetTicks - state.delivered) / (double) VigilRules.TICKS_PER_GAME_HOUR;
 			sp.sendOverlayMessage(Component.translatable("autedium_grindfulness.vigil.bar",
-				clock, hungerBar(sp.getFoodData().getFoodLevel())));
+				String.format(Locale.ROOT, "%.1f", hoursLeft), hungerBar(sp.getFoodData().getFoodLevel())));
 		}
 	}
 

@@ -30,12 +30,81 @@ class VigilRulesTest {
 
 	@Test
 	void breakConditions() {
-		assertFalse(VigilRules.shouldBreak(true, 14, 14, false, false, true));
-		assertTrue(VigilRules.shouldBreak(false, 20, 14, false, false, true)); // night falls
-		assertTrue(VigilRules.shouldBreak(true, 13, 14, false, false, true));  // hunger drops below floor
-		assertTrue(VigilRules.shouldBreak(true, 20, 14, true, false, true));   // moved
-		assertTrue(VigilRules.shouldBreak(true, 20, 14, false, true, true));   // damaged
-		assertTrue(VigilRules.shouldBreak(true, 20, 14, false, false, false)); // released sneak (input)
+		// sneak no longer part of the deal (rework 2) — movement is the input breaker
+		assertFalse(VigilRules.shouldBreak(true, 14, 14, false, false));
+		assertTrue(VigilRules.shouldBreak(false, 20, 14, false, false)); // night falls
+		assertTrue(VigilRules.shouldBreak(true, 13, 14, false, false));  // hunger drops below floor
+		assertTrue(VigilRules.shouldBreak(true, 20, 14, true, false));   // moved
+		assertTrue(VigilRules.shouldBreak(true, 20, 14, false, true));   // damaged
+	}
+
+	@Test
+	void remainingDaytime() {
+		assertEquals(12000, VigilRules.remainingDaytime(0));
+		assertEquals(1, VigilRules.remainingDaytime(11999));
+		assertEquals(0, VigilRules.remainingDaytime(12000)); // night
+		assertEquals(0, VigilRules.remainingDaytime(18000));
+		assertEquals(12000, VigilRules.remainingDaytime(24000)); // wraps to dawn
+		assertEquals(6000, VigilRules.remainingDaytime(24000 + 6000));
+	}
+
+	@Test
+	void maxWaitHoursCapsAtRemainingDaytimeInHalfSteps() {
+		assertEquals(8.0, VigilRules.maxWaitHours(12000)); // full day, slider ceiling wins
+		assertEquals(8.0, VigilRules.maxWaitHours(8000));
+		assertEquals(3.5, VigilRules.maxWaitHours(3700)); // snapped DOWN to 0.5 step
+		assertEquals(3.5, VigilRules.maxWaitHours(3999));
+		assertEquals(1.0, VigilRules.maxWaitHours(1000));
+		assertEquals(0.5, VigilRules.maxWaitHours(999)); // below MIN — caller refuses
+		assertEquals(0.0, VigilRules.maxWaitHours(0));
+	}
+
+	@Test
+	void clampWaitHoursSanitizesClientRequests() {
+		assertEquals(4.0, VigilRules.clampWaitHours(4.0, 12000));
+		assertEquals(4.0, VigilRules.clampWaitHours(3.99, 12000)); // snapped to 0.5 grid
+		assertEquals(8.0, VigilRules.clampWaitHours(999.0, 12000)); // slider ceiling
+		assertEquals(1.0, VigilRules.clampWaitHours(0.0, 12000));  // floor at MIN
+		assertEquals(3.5, VigilRules.clampWaitHours(8.0, 3700));   // remaining-daytime cap
+		assertEquals(0.0, VigilRules.clampWaitHours(2.0, 999));    // dusk too close: refused
+	}
+
+	@Test
+	void durationTargetMath() {
+		assertEquals(8000, VigilRules.targetTicks(8.0));
+		assertEquals(2500, VigilRules.targetTicks(2.5));
+		assertEquals(7, VigilRules.deliveredPerTick(8)); // multiplier - 1 extras per tick
+		assertEquals(0, VigilRules.deliveredPerTick(1));
+		assertEquals(15, VigilRules.deliveredPerTick(999)); // capped at 16
+
+		// 8000 target at 7/tick = ceil(8000/7) = 1143 real ticks
+		assertEquals(1143, VigilRules.channelDurationTicks(8000, 8));
+		assertEquals(1000, VigilRules.channelDurationTicks(1000, 2)); // 1/tick
+		assertEquals(Long.MAX_VALUE, VigilRules.channelDurationTicks(1000, 1)); // never completes
+	}
+
+	@Test
+	void liveEstimatesMatchDurationMath() {
+		// 8h at 8x: 1143 ticks -> 57.15 real seconds
+		assertEquals(1143 / 20.0, VigilRules.estimatedRealSeconds(8.0, 8), 1e-9);
+		// exhaustion = perTick * duration; food points = exhaustion / 4
+		float exh = VigilRules.estimatedExhaustion(8.0, 8);
+		assertEquals(VigilRules.exhaustionPerTick(8) * 1143, exh, 1e-4);
+		assertEquals(exh / 4.0, VigilRules.estimatedFoodCost(8.0, 8), 1e-4);
+		assertTrue(Double.isInfinite(VigilRules.estimatedRealSeconds(8.0, 1)));
+	}
+
+	// DELIVERED-TARGET HONESTY: summing deliveredPerTick over channelDurationTicks
+	// must reach the target, and not a full tick's worth early
+	@Test
+	void deliveredReachesTargetExactlyAtDuration() {
+		for (int mult : new int[]{2, 3, 8, 16}) {
+			long target = VigilRules.targetTicks(3.5);
+			long dur = VigilRules.channelDurationTicks(target, mult);
+			long per = VigilRules.deliveredPerTick(mult);
+			assertTrue(dur * per >= target);
+			assertTrue((dur - 1) * per < target);
+		}
 	}
 
 	@Test

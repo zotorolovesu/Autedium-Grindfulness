@@ -13,6 +13,8 @@ public final class GrindNetworking {
 	public static void registerPayloads() {
 		PayloadTypeRegistry.clientboundPlay().register(GlowPingPayload.TYPE, GlowPingPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(PityHintPayload.TYPE, PityHintPayload.CODEC);
+		// serverbound side — vigil wait requests (receiver lives in VigilModule.init)
+		PayloadTypeRegistry.serverboundPlay().register(VigilWaitPayload.TYPE, VigilWaitPayload.CODEC);
 	}
 
 	public static void sendGlow(ServerPlayer player, List<BlockPos> positions, int argb, int durationTicks) {
