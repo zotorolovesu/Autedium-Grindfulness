@@ -24,6 +24,11 @@ public final class GrindConfig {
 	public int pityScanRadius = 32;
 	public int prospectRadius = 12;
 	public int prospectCooldownTicks = 900;
+	public int ledgerMilestone = 500;
+	public int ledgerIdleSeconds = 90;
+	public int vigilMultiplier = 8;   // capped at 16 in VigilRules
+	public int vigilRadius = 8;       // capped at 16 in VigilRules
+	public int vigilHungerFloor = 14; // sprint threshold — food is the fuel meter
 
 	public static GrindConfig get() {
 		return instance;
