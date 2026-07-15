@@ -287,7 +287,10 @@ public final class ConfigScreenFactory {
 						}
 					})
 					.build());
-				group.options(tunablesFor(id));
+				List<Option<Integer>> tunables = tunablesFor(id);
+				if (!tunables.isEmpty()) { // yacl's options() throws on empty — modules without tunables (toasts) crash the screen
+					group.options(tunables);
+				}
 			}
 			category.group(group.build());
 		}
