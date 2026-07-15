@@ -15,6 +15,10 @@ public final class FlowStreak {
 		return ++count;
 	}
 
+	public int count() {
+		return count;
+	}
+
 	// 5 breaks = haste I, 15 = II, 30 = III, under 5 u get nothing (-1)
 	public static int amplifier(int streak) {
 		if (streak >= 30) return 2;

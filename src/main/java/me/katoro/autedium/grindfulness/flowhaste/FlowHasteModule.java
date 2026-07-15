@@ -15,7 +15,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FlowHasteModule implements GrindModule {
 	private static final int EFFECT_DURATION_TICKS = 100; // 5s, refreshed every break
 
+	private static FlowHasteModule instance;
+
 	private final Map<UUID, FlowStreak> streaks = new ConcurrentHashMap<>();
+
+	public FlowHasteModule() {
+		instance = this;
+	}
+
+	// read-only peek for the grind ledger's "best streak" line
+	public static int currentStreak(UUID playerId) {
+		FlowHasteModule m = instance;
+		if (m == null) return 0;
+		FlowStreak s = m.streaks.get(playerId);
+		return s == null ? 0 : s.count();
+	}
 
 	@Override
 	public String id() {
