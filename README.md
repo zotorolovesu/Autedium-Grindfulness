@@ -1,38 +1,42 @@
 # AuTedium – Grindfulness
 
-Anti-tedium QoL for people whose attention span dies mid-grind. Vein mining, flow haste, ore pings, pity streaks — every feature toggleable, and the mod rates its own fairness ("balanced." → "wow kinda unfair!").
+fabric mod for minecraft 26.2. makes grinding suck less without making the game easier. i have the attention span of a baby zombie so i built this.
 
-**AuTedium – Grindfulness** is a Fabric mod for Minecraft 26.2 that makes grinding less boring without making the game easier. Built for ADHD brains: the tedium goes, the cost stays.
+the one rule: **less tedium, never less cost.** full durability, full hunger, vanilla loot rates. the mod only deletes the boring parts — the clicking, the searching, the waiting, the forgetting where you died.
 
-One rule governs every feature: **reduce tedium, never expected cost.** You pay full durability, full hunger, and get vanilla loot rates — the mod just deletes the boring parts: repetitive clicking, aimless searching, brutal dry streaks, invisible progress.
+## what's in it
 
-## Features (all individually toggleable)
+everything is a toggle. mining stuff:
 
-- ⛏️ **Vein Miner** — sneak-break one ore or log and the whole connected vein/tree pops. Full vanilla cost per block; tool breaks mid-vein, chain stops.
-- ⚡ **Flow State** — keep breaking the same block family and stack Haste I→III. Stop or switch, it fades. Rewards staying locked in.
-- 💎 **Pity Ping** — 800 deep blocks without a diamond? The nearest *existing* vein glows through walls for 10s. Never spawns ore — reveal only.
-- 🔍 **Prospector Ping** — sneak + right-click with a pickaxe: nearby ores glow for 5s. 45s cooldown.
-- 🍞 **Dopamine Toasts** — milestone popups and dry-streak progress. Pure feedback, zero balance impact.
+- **vein miner** — sneak-break one ore/log, the connected vein pops. full cost per block, tool breaks mid-vein = chain stops.
+- **flow state** — keep breaking the same block family, stack haste I→III. stop or switch and it fades.
+- **pity ping** — 800 deep blocks with no diamond? nearest *existing* vein glows through walls for a bit. reveal only, never spawns ore.
+- **prospector** — sneak + right-click with a pick, nearby ores glow. costs durability, has a cooldown.
+- **torch cadence** — sneak with torches in hand and dark spots get lit as you walk. every torch paid from your stack.
 
-## The Fairness Meter
+around the base:
 
-The config screen (YACL, opens from Mod Menu or `/grindfulness`) judges your active combo live as you toggle — from *"vanilla purist."* through *"balanced."* and *"pushing it."* to *"wow kinda unfair!"* The mod is honest about how much you're cheating.
+- **vigil** — skyrim wait button. press V, pick how many hours, kneel. crops grow, furnaces run, copper ages — and your hunger drains to match, daytime only, and a zombie will absolutely end you mid-wait. food for time.
+- **brew queue** — click a busy brewing stand with more ingredients, they queue and auto-load. same ingredients, same blaze powder, same time.
+- **encore** — animal on breeding cooldown? feed it double to skip the wait. costs triple the items per baby vs waiting.
+- **auto graze** — designated hotbar slot, plain food gets eaten when you're hungry. hard locked in combat, effect foods stay manual.
 
-## Requirements
+and the brain stuff:
 
-- Minecraft 26.2 (Java 25)
-- Fabric Loader 0.19.3+
-- Fabric API
-- YACL is bundled (jar-in-jar); Mod Menu optional but recommended
+- **grind ledger** — action bar stats: milestone flashes while mining, session summary when you take a breather.
+- **last breath** — died? coords + distance + a glow column at your death spot, despawn countdown included. pure info, corpse run is still yours to survive.
+- **pin book** — `/pin add mine` and the action bar points you there. no teleports, just memory.
+- **toasts** — milestone popups. zero balance impact, pure dopamine.
 
-## Building
+## fairness meter
 
-```
-JAVA_HOME=<jdk 25+> ./gradlew build
-```
+the config screen (mod menu, YACL) judges your combo live as you flip toggles — from "vanilla purist." to "wow kinda unfair!". heavier features (vigil, encore, auto graze) push the meter harder. the mod is honest about how much you're cheating.
 
-Jar lands in `build/libs/`. Tunables (vein caps, pity threshold, cooldowns) live in `config/autedium_grindfulness.json`.
+## running it
 
-## License
+- minecraft 26.2, fabric loader 0.19.3+, fabric api
+- YACL comes bundled, mod menu optional
+
+build: `JAVA_HOME=<jdk 25+> ./gradlew build`, jar lands in `build/libs/`. tunables live in `config/autedium_grindfulness.json` or the config screen sliders.
 
 MIT
