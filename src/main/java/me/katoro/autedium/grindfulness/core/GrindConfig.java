@@ -23,6 +23,10 @@ public final class GrindConfig {
 	public int pityRecheck = 100;
 	public int pityScanRadius = 32;
 	public int prospectRadius = 12;
+	public int torchLightThreshold = 5; // clamped 0..14 in TorchCadenceRules
+	public int brewQueueCap = 3;        // clamped 1..8 in BrewQueueRules
+	public int grazeThreshold = 10;     // clamped 1..19 in AutoGrazeRules
+	public int grazeSlot = 9;           // hotbar slot 1..9, clamped in AutoGrazeRules
 	public int prospectCooldownTicks = 900;
 	public int ledgerMilestone = 500;
 	public int ledgerIdleSeconds = 90;

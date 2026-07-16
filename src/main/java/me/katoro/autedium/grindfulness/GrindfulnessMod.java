@@ -1,14 +1,17 @@
 package me.katoro.autedium.grindfulness;
 
+import me.katoro.autedium.grindfulness.brewqueue.BrewQueueModule;
 import me.katoro.autedium.grindfulness.core.GrindConfig;
 import me.katoro.autedium.grindfulness.core.GrindModule;
 import me.katoro.autedium.grindfulness.core.ModuleRegistry;
 import me.katoro.autedium.grindfulness.flowhaste.FlowHasteModule;
+import me.katoro.autedium.grindfulness.lastbreath.LastBreathModule;
 import me.katoro.autedium.grindfulness.ledger.GrindLedgerModule;
 import me.katoro.autedium.grindfulness.net.GrindNetworking;
 import me.katoro.autedium.grindfulness.pityping.PityPingModule;
 import me.katoro.autedium.grindfulness.prospector.ProspectorModule;
 import me.katoro.autedium.grindfulness.toasts.ToastsModule;
+import me.katoro.autedium.grindfulness.torchcadence.TorchCadenceModule;
 import me.katoro.autedium.grindfulness.veinminer.VeinMinerModule;
 import me.katoro.autedium.grindfulness.vigil.VigilModule;
 import net.fabricmc.api.ModInitializer;
@@ -36,6 +39,12 @@ public class GrindfulnessMod implements ModInitializer {
 		ModuleRegistry.register(new ToastsModule());
 		ModuleRegistry.register(new GrindLedgerModule());
 		ModuleRegistry.register(new VigilModule());
+		ModuleRegistry.register(new LastBreathModule());
+		ModuleRegistry.register(new TorchCadenceModule());
+		ModuleRegistry.register(new BrewQueueModule());
+		ModuleRegistry.register(new me.katoro.autedium.grindfulness.pinbook.PinBookModule());
+		ModuleRegistry.register(new me.katoro.autedium.grindfulness.autograze.AutoGrazeModule());
+		ModuleRegistry.register(new me.katoro.autedium.grindfulness.encore.EncoreModule());
 		ModuleRegistry.all().forEach(GrindModule::init);
 
 		LOGGER.info("AuTedium - Grindfulness loaded {} modules", ModuleRegistry.all().size());

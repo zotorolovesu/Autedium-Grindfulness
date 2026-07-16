@@ -4,27 +4,25 @@ import me.katoro.autedium.grindfulness.core.BlockFamilies;
 import me.katoro.autedium.grindfulness.core.FairnessMeter;
 import me.katoro.autedium.grindfulness.core.GrindConfig;
 import me.katoro.autedium.grindfulness.core.GrindModule;
+import me.katoro.autedium.grindfulness.core.PerPlayer;
 import me.katoro.autedium.grindfulness.core.ModuleRegistry;
 import me.katoro.autedium.grindfulness.flowhaste.FlowHasteModule;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Locale;
 
 public final class GrindLedgerModule implements GrindModule {
 	private static final int BURST_FLOOR = 50;    // idle summary needs a real burst behind it
 	private static final int POLL_INTERVAL = 20;  // check idle once a second, plenty
 
 	// session-scoped, cleared on disconnect — NOT the flow-haste never-evicts situation
-	private final Map<UUID, LedgerTracker> trackers = new ConcurrentHashMap<>();
+	private final PerPlayer<LedgerTracker> trackers = new PerPlayer<>();
 
 	@Override
 	public String id() {
@@ -68,7 +66,6 @@ public final class GrindLedgerModule implements GrindModule {
 			}
 		});
 
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> trackers.remove(handler.getPlayer().getUUID()));
 	}
 
 	private static long idleWindowTicks() {

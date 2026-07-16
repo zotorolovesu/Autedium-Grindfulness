@@ -28,6 +28,7 @@ public class GrindfulnessClient implements ClientModInitializer {
 		GlowRenderer.init();
 		ToastsClient.init();
 		me.katoro.autedium.grindfulness.client.vigil.VigilClient.init();
+		me.katoro.autedium.grindfulness.client.pinbook.PinBookClient.init();
 
 		ClientPlayNetworking.registerGlobalReceiver(GlowPingPayload.TYPE, (payload, context) ->
 			GlowRenderer.add(payload.positions(), payload.argb(), payload.durationTicks()));

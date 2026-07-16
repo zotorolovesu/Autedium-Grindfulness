@@ -46,11 +46,14 @@ public final class ConfigScreenFactory {
 	private static final Map<String, String> MODULE_GROUP = Map.of(
 		"vein_miner", "mining",
 		"flow_haste", "mining",
+		"torch_cadence", "mining",
 		"pity_ping", "sense",
 		"prospector", "sense",
 		"vigil", "ritual",
 		"toasts", "feedback",
-		"grind_ledger", "feedback"
+		"grind_ledger", "feedback",
+		"last_breath", "feedback",
+		"pin_book", "feedback"
 	);
 	private static final String[] GROUP_ORDER = {"mining", "sense", "ritual", "feedback", "misc"};
 
@@ -202,6 +205,12 @@ public final class ConfigScreenFactory {
 				list.add(intSlider("vein_cap_ores", DEFAULTS.veinCapOres, 2, 64, 1, () -> c.veinCapOres, v -> c.veinCapOres = v, v -> plainFmt(v, " blocks")));
 				list.add(intSlider("vein_cap_logs", DEFAULTS.veinCapLogs, 2, 128, 2, () -> c.veinCapLogs, v -> c.veinCapLogs = v, v -> plainFmt(v, " blocks")));
 			}
+			case "auto_graze" -> {
+				list.add(intSlider("graze_threshold", DEFAULTS.grazeThreshold, 1, 19, 1, () -> c.grazeThreshold, v -> c.grazeThreshold = v, v -> plainFmt(v, " / 20")));
+				list.add(intSlider("graze_slot", DEFAULTS.grazeSlot, 1, 9, 1, () -> c.grazeSlot, v -> c.grazeSlot = v, v -> plainFmt(v, "")));
+			}
+			case "brew_queue" -> list.add(intSlider("brew_queue_cap", DEFAULTS.brewQueueCap, 1, 8, 1, () -> c.brewQueueCap, v -> c.brewQueueCap = v, v -> plainFmt(v, " queued")));
+			case "torch_cadence" -> list.add(intSlider("torch_light_threshold", DEFAULTS.torchLightThreshold, 0, 14, 1, () -> c.torchLightThreshold, v -> c.torchLightThreshold = v, v -> plainFmt(v, " light")));
 			case "flow_haste" -> list.add(intSlider("flow_reset_ticks", DEFAULTS.flowResetTicks, 20, 600, 20, () -> c.flowResetTicks, v -> c.flowResetTicks = v, ConfigScreenFactory::ticksFmt));
 			case "pity_ping" -> {
 				list.add(intSlider("pity_threshold", DEFAULTS.pityThreshold, 100, 2000, 50, () -> c.pityThreshold, v -> c.pityThreshold = v, v -> plainFmt(v, " blocks")));

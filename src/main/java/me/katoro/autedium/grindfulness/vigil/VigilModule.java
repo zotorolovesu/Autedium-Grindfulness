@@ -2,9 +2,9 @@ package me.katoro.autedium.grindfulness.vigil;
 
 import me.katoro.autedium.grindfulness.core.GrindConfig;
 import me.katoro.autedium.grindfulness.core.GrindModule;
+import me.katoro.autedium.grindfulness.core.PerPlayer;
 import me.katoro.autedium.grindfulness.net.VigilWaitPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -23,9 +23,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.gamerules.GameRules;
 
 import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 // skyrim-style "wait": press V (client keybind), pick 1-8 game hours, kneel and
 // compress time in a radius — ALL random-tick behavior (crops, saplings, copper,
@@ -46,7 +43,7 @@ public final class VigilModule implements GrindModule {
 	private static final double MOVE_EPSILON_SQR = 0.01; // ~0.1 blocks of drift = you moved
 
 	// server-side channel map, cleared on disconnect. no persistence (per spec)
-	private final Map<UUID, VigilState> channeling = new ConcurrentHashMap<>();
+	private final PerPlayer<VigilState> channeling = new PerPlayer<>();
 
 	@Override
 	public String id() {
@@ -74,14 +71,13 @@ public final class VigilModule implements GrindModule {
 			}
 		});
 
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> channeling.remove(handler.getPlayer().getUUID()));
 	}
 
 	// server-side revalidation of ALL start guards — the client pre-check is
 	// cosmetics, this is the law.
 	private void startChannel(ServerPlayer sp, double requestedHours) {
 		if (!enabled() || !(sp.level() instanceof ServerLevel level) || !sp.isAlive()) return;
-		if (channeling.containsKey(sp.getUUID())) return; // already kneeling
+		if (channeling.contains(sp.getUUID())) return; // already kneeling
 
 		long dayTime = level.getDefaultClockTime();
 		// guard #1 (daytime only) + guard #2 (hunger floor)

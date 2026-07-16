@@ -3,21 +3,21 @@ package me.katoro.autedium.grindfulness.flowhaste;
 import me.katoro.autedium.grindfulness.core.BlockFamilies;
 import me.katoro.autedium.grindfulness.core.GrindConfig;
 import me.katoro.autedium.grindfulness.core.GrindModule;
+import me.katoro.autedium.grindfulness.core.PerPlayer;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class FlowHasteModule implements GrindModule {
 	private static final int EFFECT_DURATION_TICKS = 100; // 5s, refreshed every break
 
 	private static FlowHasteModule instance;
 
-	private final Map<UUID, FlowStreak> streaks = new ConcurrentHashMap<>();
+	// PerPlayer evicts on disconnect — closes the old never-evicts leak
+	private final PerPlayer<FlowStreak> streaks = new PerPlayer<>();
 
 	public FlowHasteModule() {
 		instance = this;
